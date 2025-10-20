@@ -4,11 +4,9 @@ on:
   push:
     branches:
       - main
-      - master
   pull_request:
     branches:
       - main
-      - master
   workflow_dispatch:
 
 jobs:
@@ -33,15 +31,18 @@ jobs:
       - name: Build project
         run: npm run build
 
+      - name: Gzip process
+        run: find ./dist/ -type f -exec gzip -k -f -9 {} \;
+
       - name: Create archive
         run: |
           cd dist
-          tar -czf ../nordwibe-dist.tar.gz .
+          tar -czf ../nw-f.tar.gz .
           cd ..
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: nordwibe-build
-          path: nordwibe-dist.tar.gz
-          retention-days: 30
+          name: nw-f
+          path: nw-f.tar.gz
+          retention-days: 90
