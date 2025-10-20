@@ -34,15 +34,9 @@ jobs:
       - name: Gzip process
         run: find ./dist/ -type f -exec gzip -k -f -9 {} \;
 
-      - name: Create archive
-        run: |
-          cd dist
-          tar -czf ../nw-f.tar.gz .
-          cd ..
-
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: nw-f
-          path: nw-f.tar.gz
+          name: nw_f
+          path: dist
           retention-days: 90
