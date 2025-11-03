@@ -4,11 +4,9 @@ on:
   push:
     branches:
       - main
-      - demo
   pull_request:
     branches:
       - main
-      - demo
   workflow_dispatch:
 
 jobs:
