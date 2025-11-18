@@ -1,9 +1,10 @@
 import { useEffect, useRef, useMemo } from "react";
 import { useGetMe } from "../../../ProfilePage/service/useGetMe";
 import { useGetChats } from "../../../ChatPage/service/useGetChats";
-import Wrapper from "../../../../shared/Components/Wrapper/Wrapper";
 import ChatBubble from "../ChatBubble/ChatBubble";
 import Loading from "../../../../shared/Components/Loading/Loading";
+import Wrapper from "../../../../shared/Components/Wrapper/Wrapper";
+import { useMarkAsRead } from "../../service/useMarkAsRead";
 
 interface ChatContentProps {
   companionId: string;
@@ -12,6 +13,7 @@ interface ChatContentProps {
 const ChatContent: React.FC<ChatContentProps> = ({ companionId }) => {
   const { data: currentUser, isLoading: isUserLoading } = useGetMe();
   const { data: allMessages, isLoading: isMessagesLoading } = useGetChats();
+  const { mutate: markAsRead } = useMarkAsRead();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const filteredMessages = useMemo(() => {
@@ -26,6 +28,24 @@ const ChatContent: React.FC<ChatContentProps> = ({ companionId }) => {
     );
   }, [allMessages, companionId, currentUser]);
 
+  // Логика для отметки сообщений как прочитанных
+  useEffect(() => {
+    if (!currentUser || !filteredMessages.length) return;
+
+    // Находим непрочитанные сообщения от companionId к currentUser
+    const unreadMessagesFromCompanion = filteredMessages.filter(
+      (message: any) =>
+        message.from_user_id === companionId &&
+        message.to_user_id === currentUser.id &&
+        !message.readed_at
+    );
+
+    if (unreadMessagesFromCompanion.length > 0) {
+      const messageIds = unreadMessagesFromCompanion.map((msg: any) => msg.id);
+      markAsRead(messageIds);
+    }
+  }, [filteredMessages, companionId, currentUser, markAsRead]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -36,32 +56,18 @@ const ChatContent: React.FC<ChatContentProps> = ({ companionId }) => {
 
   if (isUserLoading || isMessagesLoading) return <Loading />;
 
-  // Если currentUser не загружен, но сообщения есть, показываем сообщения без определения fromMe
-  if (!currentUser) {
-    return (
-      <Wrapper className="bg-purple-main-disabled overflow-x-scroll pt-3">
-        <div style={{ height: "calc(100vh - 181px)" }}>
-          {filteredMessages.map((message: any) => (
-            <ChatBubble
-              key={message.id}
-              message={message.text}
-              fromMe={false}
-            />
-          ))}
-          <div ref={messagesEndRef} />
-        </div>
-      </Wrapper>
-    );
-  }
-
   return (
-    <Wrapper className="bg-purple-main-disabled overflow-scroll pt-3">
-      <div style={{ height: "calc(100vh - 181px)" }}>
+    <Wrapper className="h-full overflow-y-auto bg-purple-main-disabled">
+      <div className="pt-3 pb-15">
         {filteredMessages.map((message: any) => (
           <ChatBubble
             key={message.id}
             message={message.text}
-            fromMe={message.from_user_id === currentUser.id}
+            fromMe={
+              currentUser ? message.from_user_id === currentUser.id : false
+            }
+            time={message.created_at}
+            isRead={!!message.readed_at}
           />
         ))}
         <div ref={messagesEndRef} />
