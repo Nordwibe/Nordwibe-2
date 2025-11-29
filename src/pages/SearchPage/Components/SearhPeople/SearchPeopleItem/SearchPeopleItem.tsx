@@ -1,21 +1,24 @@
 import { Link } from "react-router-dom";
 import HashTag from "../../../../../shared/Components/HashTag/HashTag";
 import { baseURLforImages } from "../../../../../shared/plugin/axios";
-import type { userTypes } from "../../../types/userTypes";
 import { setCompatibilityStyle } from "../../../utils/setCompatibilityStyle";
+import OptimizedImage from "../../../../../shared/Components/OptimizedImage/OptimizedImage";
+import { calculateAge } from "../../../../../shared/utils/calculateAge";
 
 const SearchPeopleItem = ({
   user,
   compatibility,
+  isBlocked = false,
 }: {
-  user: userTypes;
+  user: any;
   compatibility: number;
+  isBlocked?: boolean;
 }) => {
   console.log(user);
   return (
     <Link
       to={"/profile/" + user.id}
-      state={{ user, compatibility }}
+      state={{ user }}
       className="bg-white p-2 flex gap-3 max-w-[700px] rounded-[12px] mt-4"
     >
       <div className="w-[100px] h-[100px] bg-purple-sub-button rounded-xl shrink-0">
@@ -26,10 +29,14 @@ const SearchPeopleItem = ({
               : user.name?.charAt(0) || ""}
           </div>
         ) : (
-          <img
-            className="w-[100px] h-[100px] rounded-xl"
+          <OptimizedImage
+            className="w-10 h-10 rounded-xl shrink-0"
             src={baseURLforImages + user.avatar_url}
             alt="avatar"
+            width={100}
+            height={100}
+            quality={50}
+            priority={true}
           />
         )}
       </div>
@@ -37,11 +44,12 @@ const SearchPeopleItem = ({
         <div className="flex justify-between">
           <h2 className="text-[0.875rem] font-semibold leading-5 text-left">
             {user.username || user.name || "Неизвестный"}
-            {user.age ? ", " : ""} {user.age}
+            {user.birth_date ? ", " : ""} {calculateAge(user.birth_date)}
           </h2>
           <div
             className={`${setCompatibilityStyle(
-              compatibility
+              compatibility,
+              isBlocked
             )} text-nowrap h-5 rounded-[12px] text-[0.875rem] font-semibold leading-[0.75rem] text-white py-1 px-2`}
           >
             {compatibility ? compatibility + " %" : "???"}
@@ -54,7 +62,7 @@ const SearchPeopleItem = ({
         </div>
         <div className="flex flex-col gap-1 mt-1">
           <div className="flex gap-1 flex-wrap">
-            {user.hashtags_list?.map((hashtag) => (
+            {user.hashtags_list?.map((hashtag: any) => (
               <HashTag key={hashtag} hashtagTitle={hashtag} />
             ))}
           </div>
