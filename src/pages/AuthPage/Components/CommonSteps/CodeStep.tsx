@@ -6,11 +6,16 @@ import Heading from "../SignUp/Heading";
 import useFormatUnformatCode from "../../hooks/useFormatCode";
 import React from "react";
 import { useConfirmPhone } from "../../service/useConfirmPhone";
-import { useLocation, useNavigate } from "react-router-dom";
-import { MAIN_ROUTE } from "../../../../shared/utils/consts";
+import { useLocation } from "react-router-dom";
 import { useAccessToken } from "../../../../shared/service/useAuthToken";
 import ContinueWrapper from "../ContinueWrapper/ContinueWrapper";
 import WrongData from "../PhoneErrorMsg/PhoneErrorMsg";
+import { useRedirectAfterLogin } from "../../../../shared/hooks/useRedirectAfterLogin";
+import { AccountDeletionModal } from "../AccountDeletionModal/AccountDeletionModal";
+import {
+  clearRedirectTimeout,
+  forceRedirectToWelcome,
+} from "../../../../shared/plugin/redirectToLogin";
 
 type Props = StepPropsTypes<"code">;
 
@@ -20,6 +25,8 @@ const CodeStep: React.FC<Props> = ({
   onNext,
   onBack,
 }) => {
+  const [showDeletionModal, setShowDeletionModal] = useState(false);
+
   const fullPhoneNumber = `+7${formData.phone}`;
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -29,31 +36,36 @@ const CodeStep: React.FC<Props> = ({
 
   const [code, setCode] = useState(formData.code || "");
 
-  const navigate = useNavigate();
   const location = useLocation();
 
   const { mutate: getToken } = useAccessToken();
+  const { performRedirect } = useRedirectAfterLogin();
 
   const handleSuccess = () => {
     updateForm({ code });
 
     getToken(undefined, {
       onSuccess: () => {
+        clearRedirectTimeout();
+
         onNext();
         if (location.pathname === "/sign-in") {
-          navigate(MAIN_ROUTE);
+          performRedirect();
           localStorage.removeItem("signin-form");
         }
       },
-      onError: () => {
-        alert("Ошибка получения access токена"); // todo: Исправить данный функционал
+      onError: (error: any) => {
+        console.log("Error details:", error);
+
+        console.log("Account recently deleted, showing modal");
+        setShowDeletionModal(true);
       },
     });
   };
 
   const captcha_token = localStorage.getItem("captcha_token");
 
-  const { mutate, isError, isPending } = useConfirmPhone(handleSuccess);
+  const { mutate, isError, isPending, error } = useConfirmPhone(handleSuccess);
 
   const handleNext = useCallback(
     (e?: React.FormEvent) => {
@@ -66,6 +78,16 @@ const CodeStep: React.FC<Props> = ({
     },
     [captcha_token, code, fullPhoneNumber, mutate]
   );
+
+  if (isError) {
+    //@ts-ignore
+    console.log(error?.status);
+  }
+
+  const handleCloseDeletionModal = () => {
+    forceRedirectToWelcome();
+    setShowDeletionModal(false);
+  };
 
   const isCodeValid = code.length === 4 && !isPending && !!captcha_token;
 
@@ -101,8 +123,9 @@ const CodeStep: React.FC<Props> = ({
           </form>
 
           <WrongData
+            //@ts-ignore
+            errorCode={error?.status}
             isError={isError}
-            message={"Неправильный код. Попробуйте ещё раз"}
           />
         </section>
 
@@ -120,6 +143,11 @@ const CodeStep: React.FC<Props> = ({
           />
         </ContinueWrapper>
       </div>
+
+      <AccountDeletionModal
+        isOpen={showDeletionModal}
+        onClose={handleCloseDeletionModal}
+      />
     </main>
   );
 };

@@ -1,33 +1,20 @@
+import { BLACK_LIST } from "../../../../shared/utils/consts";
 import type { SettingsButtonTypes } from "../SettingsButton/SettingsButton";
 import SettingsButton from "../SettingsButton/SettingsButton";
 import SettingsTip from "../SettingsTip/SettingsTip";
 
 const buttonsData: SettingsButtonTypes[] = [
-  // {
-  //   title: "Уведомление в Telegram-боте",
-  // },
-  // {
-  //   title: "Сменить номер телефона",
-  //   isPhoneChange: true,
-  // },
   {
-    title: "Настройки приватности",
-    to: "/private",
+    title: "Чёрный список",
+    isRed: false,
+    to: BLACK_LIST,
   },
-  // {
-  //   title: "О приложении",
-  //   to: "/about",
-  // },
-  // {
-  //   title: "Часто задаваемые вопросы",
-  //   to: "/faq",
-  // },
-  // {
-  //   title: "Удалить аккаунт",
-  //   isRed: true,
-  // },
   {
     title: "Выйти из аккаунта",
+    isRed: true,
+  },
+  {
+    title: "Удалить аккаунт",
     isRed: true,
   },
 ];
@@ -36,9 +23,8 @@ const SettingsButtonList = () => {
   return (
     <div className="">
       {buttonsData.map((button, index) => (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2" key={index}>
           <SettingsButton
-            key={index}
             title={button.title}
             isPhoneChange={button.isPhoneChange}
             isRed={button.isRed}

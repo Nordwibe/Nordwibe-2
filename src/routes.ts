@@ -1,13 +1,13 @@
 import { lazy } from "react";
 
 import {
+  BLACK_LIST,
   CHAT_DIALOG,
   CHAT_ROUTE,
   MAIN_ROUTE,
   MY_PROFILE_ROUTE,
   OAUTH_CALLBACK,
   PRIVACY_ROUTE,
-  PRIVATE_SETTINGS,
   PROFILE_EDIT_ROUTE,
   QUIZ_PASSING_ROUTE,
   QUIZ_RESULT_ROUTE,
@@ -33,7 +33,6 @@ import ErrorPage from "./shared/Components/ErrorPage/ErrorPage";
 import PrivacyPage from "./pages/PrivacyPage/PrivacyPage";
 import QuizPage from "./pages/QuizPage/QuizPage";
 import TestPage from "./pages/TestPage/TestPage";
-import PrivateSettingsPage from "./pages/PrivateSettingsPage/PrivateSettingsPage";
 import OAuthCallback from "./pages/AuthPage/Components/OAuth2/OAuthCallback";
 
 // где lazy() - ленивая подгрузка. То есть компонента булет загружена в момент перехода, а не в момент запуска приложения
@@ -118,12 +117,12 @@ export const routes = [
     Component: SettingsPage,
   },
   {
-    path: CHAT_DIALOG,
-    Component: lazy(() => import("./pages/ChatDialogPage/ChatDialogPage")),
+    path: BLACK_LIST,
+    Component: lazy(() => import("./pages/BlackListPage/BlackListPage")),
   },
   {
-    path: PRIVATE_SETTINGS,
-    Component: PrivateSettingsPage,
+    path: CHAT_DIALOG,
+    Component: lazy(() => import("./pages/ChatDialogPage/ChatDialogPage")),
   },
   {
     path: "*",
