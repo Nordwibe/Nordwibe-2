@@ -1,19 +1,25 @@
-import { BrowserRouter, Link, matchPath, useLocation } from "react-router-dom";
+import { BrowserRouter, Link, useLocation } from "react-router-dom";
 import AppRouter from "./shared/Components/AppRouter";
 import NavBar from "./shared/Components/NavBar/NavBar";
 import { hideNavBarRoutes } from "./shared/utils/consts";
 import CookieConsent from "react-cookie-consent";
 import { Toaster } from "react-hot-toast";
+import { useIsDesktop } from "./shared/hooks/useIsDesktop";
 
 function AppContent() {
+  const isDesktop = useIsDesktop();
   const location = useLocation();
-  const shouldHideNavBar =
+
+  // Проверяем, нужно ли скрывать NavBar для текущего пути
+  const shouldHideNavBarForRoute =
     hideNavBarRoutes.includes(location.pathname) ||
-    !!matchPath("/quiz/:uuid", location.pathname) ||
-    matchPath("/quiz/test/:uuid", location.pathname) ||
-    matchPath("/test/:uuid", location.pathname) ||
-    matchPath("/profile/:ids", location.pathname) ||
-    matchPath("/chats/:companiodId", location.pathname);
+    ["/quiz/", "/settings", "/profile/", "/quiz/test", "/test/", "/chats"].some(
+      (path) => location.pathname.startsWith(path)
+    );
+
+  // Скрываем NavBar только на мобильных устройствах для этих маршрутов
+  // На desktop NavBar всегда показывается (если не требуется скрыть)
+  const shouldHideNavBar = shouldHideNavBarForRoute && !isDesktop;
 
   return (
     <>
