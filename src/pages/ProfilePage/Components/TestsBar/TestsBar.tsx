@@ -16,6 +16,7 @@ type TestsBarProps = {
   isMyProfile?: boolean;
   userName?: string | null;
   onEdit?: () => void;
+  onResultClick?: (testId: string) => void;
 };
 
 const TestsBar: React.FC<TestsBarProps> = ({
@@ -25,6 +26,7 @@ const TestsBar: React.FC<TestsBarProps> = ({
   userName = null,
   onEdit,
   gender,
+  onResultClick,
 }) => {
   const displayName = gender == null ? "Пользователь" : userName;
 
@@ -242,15 +244,18 @@ const TestsBar: React.FC<TestsBarProps> = ({
       {/* MOBILE — горизонтальный скролл */}
       <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide xl:hidden">
         {mobileItems.map((item, index) => {
-          if ("uuid" in item) {
-            // Это тест
-            return (
-              <TestsItem
-                key={item.uuid}
-                isMyProfile={isMyProfile}
-                test={item}
-                isCompleted={"isCompleted" in item ? item.isCompleted : true}
-              />
+  if ("uuid" in item) {
+    return (
+      <TestsItem
+        key={item.uuid}
+        isMyProfile={isMyProfile}
+        test={item}
+        isCompleted={"isCompleted" in item ? item.isCompleted : true}
+        onResultClick={(isMyProfile || (!isMyProfile && item.isCompleted)) && onResultClick 
+          ? () => onResultClick(item.uuid) 
+          : undefined
+        }
+      />
             );
           } else {
             // Это заглушка
@@ -271,14 +276,18 @@ const TestsBar: React.FC<TestsBarProps> = ({
         "
       >
         {desktopItems.map((item, index) => {
-          if (item.type === "test") {
-            return (
-              <TestsItemDesktop
-                key={item.test.uuid}
-                test={item.test}
-                isMyProfile={isMyProfile}
-                isCompleted={item.isCompleted}
-              />
+  if (item.type === "test") {
+    return (
+      <TestsItemDesktop
+        key={item.test.uuid}
+        test={item.test}
+        isMyProfile={isMyProfile}
+        isCompleted={item.isCompleted}
+        onResultClick={(isMyProfile || (!isMyProfile && item.isCompleted)) && onResultClick
+          ? () => onResultClick(item.test.uuid)
+          : undefined
+        }
+      />
             );
           } else {
             return (
