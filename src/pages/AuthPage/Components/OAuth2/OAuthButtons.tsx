@@ -1,33 +1,17 @@
-import React from "react";
+import React, { useState } from "react";
 import { useOAuth2 } from "../../service/useOAuth2";
 
 const OAuthButtons: React.FC = () => {
-  const { startOAuth2, isStarting } = useOAuth2();
+  const { startOAuth, isLoading } = useOAuth2();
+  const [isStarting, setIsStarting] = useState(false);
 
   const handleOAuthStart = async (provider: "vk" | "yandex") => {
-    console.log(`Starting OAuth2 for ${provider}`);
-
+    setIsStarting(true);
     try {
-      startOAuth2(provider, {
-        onSuccess: (redirectUrl) => {
-          console.log("Success - Redirecting to:", redirectUrl);
-
-          // Упрощенная проверка - просто редиректим
-          if (redirectUrl) {
-            window.location.href = redirectUrl;
-          } else {
-            console.error("Empty redirect URL");
-            alert("Произошла ошибка при авторизации. Попробуйте еще раз.");
-          }
-        },
-        onError: (error) => {
-          console.error("OAuth2 start error:", error);
-          alert(`Ошибка авторизации: ${error.message}`);
-        },
-      });
-    } catch (err) {
-      console.error("Unexpected error:", err);
-      alert("Неожиданная ошибка. Попробуйте еще раз.");
+      startOAuth(provider);
+    } catch (error) {
+      console.error("OAuth start error:", error);
+      setIsStarting(false);
     }
   };
 
@@ -45,11 +29,11 @@ const OAuthButtons: React.FC = () => {
       <div className="grid grid-cols-2 gap-3">
         <button
           type="button"
-          disabled={isStarting}
+          disabled={isStarting || isLoading}
           onClick={() => handleOAuthStart("vk")}
-          className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
         >
-          {isStarting ? (
+          {isStarting || isLoading ? (
             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-500"></div>
           ) : (
             <>
@@ -71,11 +55,11 @@ const OAuthButtons: React.FC = () => {
 
         <button
           type="button"
-          disabled={isStarting}
+          disabled={isStarting || isLoading}
           onClick={() => handleOAuthStart("yandex")}
-          className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
         >
-          {isStarting ? (
+          {isStarting || isLoading ? (
             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-500"></div>
           ) : (
             <>

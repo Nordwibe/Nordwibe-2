@@ -31,9 +31,9 @@ import SignInPage from "./pages/AuthPage/SignInPage";
 import SettingsPage from "./pages/SettingsPage/SettingsPage";
 import ErrorPage from "./shared/Components/ErrorPage/ErrorPage";
 import PrivacyPage from "./pages/PrivacyPage/PrivacyPage";
-import OAuthCallback from "./pages/AuthPage/Components/OAuth2/OAuthCallback";
 import TestWrapper from "./pages/TestPage/TestWrapper";
 import QuizWrapper from "./pages/QuizPage/QuizWrapper";
+import OAuthCallback from "./pages/AuthPage/Components/OAuth2/OAuthCallback";
 
 // где lazy() - ленивая подгрузка. То есть компонента булет загружена в момент перехода, а не в момент запуска приложения
 

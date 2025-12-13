@@ -1,61 +1,65 @@
 import { useMutation } from "@tanstack/react-query";
 import { api } from "../../../shared/plugin/axios";
 
-export const useOAuth2 = () => {
-  const startOAuth2 = useMutation({
-    mutationFn: async (provider: "vk" | "yandex"): Promise<string> => {
+type OAuthProvider = "vk" | "yandex";
+
+interface OAuthCallbackParams {
+  code: string;
+  state: string;
+}
+
+export const useOAuthStart = () => {
+  return useMutation({
+    mutationFn: async (provider: OAuthProvider) => {
       const response = await api.post(
-        `/auth/oauth2/start?provider=${provider}`,
-        {},
-        {
-          headers: {
-            Accept: "text/plain",
-          },
-          transformResponse: [(data) => data],
-        }
+        `/auth/oauth2/start?provider=${provider}`
       );
-
-      let redirectUrl = response.data;
-
-      console.log("Raw URL from server:", redirectUrl);
-
-      if (typeof redirectUrl === "string") {
-        redirectUrl = redirectUrl.replace(/^"+|"+$/g, "");
-
-        redirectUrl = redirectUrl.trim();
-      }
-
-      console.log("Cleaned URL:", redirectUrl);
-      console.log(
-        "Starts with https:// after cleaning:",
-        redirectUrl.startsWith("https://")
-      );
-
-      if (!redirectUrl) {
-        throw new Error("Empty redirect URL received from server");
-      }
-
-      if (typeof redirectUrl !== "string") {
-        throw new Error(`Invalid redirect URL type: ${typeof redirectUrl}`);
-      }
-
-      const isUrlValid =
-        redirectUrl &&
-        redirectUrl.length > 10 &&
-        (redirectUrl.startsWith("http://") ||
-          redirectUrl.startsWith("https://"));
-
-      if (!isUrlValid) {
-        throw new Error(`Invalid redirect URL format: ${redirectUrl}`);
-      }
-
-      return redirectUrl;
+      return response.data;
+    },
+    onSuccess: (data) => {
+      window.location.href = data;
+    },
+    onError: (error) => {
+      console.error("OAuth2 start failed:", error);
+      throw error;
     },
   });
+};
+
+export const useOAuthCallback = () => {
+  return useMutation({
+    mutationFn: async ({ code, state }: OAuthCallbackParams) => {
+      const response = await api.get(`/auth/oauth2/callback`, {
+        params: { code, state },
+      });
+      return response.data;
+    },
+    onSuccess: async () => {
+      try {
+        const { fetchAccessToken } = await import("../../../shared/service/useAuthToken");
+        await fetchAccessToken();
+
+        window.location.href = "https://app.nordwibe.com/";
+      } catch (error) {
+        console.error("Failed to get access token after OAuth:", error);
+        throw error;
+      }
+    },
+    onError: (error) => {
+      console.error("OAuth2 callback failed:", error);
+      throw error;
+    },
+  });
+};
+
+export const useOAuth2 = () => {
+  const startMutation = useOAuthStart();
+  const callbackMutation = useOAuthCallback();
 
   return {
-    startOAuth2: startOAuth2.mutate,
-    isStarting: startOAuth2.isPending,
-    error: startOAuth2.error,
+    startOAuth: startMutation.mutate,
+    handleCallback: callbackMutation.mutate,
+    isLoading: startMutation.isPending || callbackMutation.isPending,
+    error: startMutation.error || callbackMutation.error,
   };
 };

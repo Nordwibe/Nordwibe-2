@@ -1,20 +1,52 @@
-import React from "react";
-import { useOAuth2Callback } from "../../service/useOAuth2Callback";
+import React, { useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { useOAuth2 } from "../../service/useOAuth2";
 
 const OAuthCallback: React.FC = () => {
-  const { isProcessing, error } = useOAuth2Callback();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { handleCallback, error } = useOAuth2();
+
+  useEffect(() => {
+    const handleOAuthCallback = async () => {
+      const searchParams = new URLSearchParams(location.search);
+      const code = searchParams.get("code");
+      const state = searchParams.get("state");
+
+      if (!code || !state) {
+        console.error("Missing code or state parameters");
+        navigate("/login", { state: { error: "Неверные параметры авторизации" } });
+        return;
+      }
+
+      try {
+        await handleCallback({ code, state });
+
+        await queryClient.invalidateQueries({ queryKey: ["user"] });
+
+      } catch (err) {
+        console.error("OAuth callback error:", err);
+        navigate("/login", {
+          state: {
+            error: "Ошибка авторизации. Пожалуйста, попробуйте снова."
+          }
+        });
+      }
+    };
+
+    handleOAuthCallback();
+  }, [location.search, handleCallback, navigate, queryClient]);
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-md">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">
-            Ошибка авторизации
-          </h2>
-          <p className="text-gray-700">{error}</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-600 text-2xl mb-4">Ошибка авторизации</div>
           <button
-            onClick={() => (window.location.href = "/login")}
-            className="mt-4 w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
+            onClick={() => navigate("/login")}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             Вернуться к входу
           </button>
@@ -24,17 +56,10 @@ const OAuthCallback: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-md text-center">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">
-          Завершение авторизации
-        </h2>
-        <div className="flex justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-        </div>
-        <p className="mt-4 text-gray-600">
-          {isProcessing ? "Обработка авторизации..." : "Перенаправление..."}
-        </p>
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+        <div className="mt-4 text-lg">Завершаем авторизацию...</div>
       </div>
     </div>
   );
